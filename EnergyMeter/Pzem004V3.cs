@@ -121,7 +121,6 @@ namespace EnergyMeter
                         crc >>= 1;
                 }
             }
-            // Note, this number has low and high bytes swapped, so use it accordingly (or swap bytes)
             return crc;
         }
 
