@@ -10,7 +10,7 @@ using EnergyMeter.Models;
 namespace EnergyMeter
 {
 
-    public class Pzem004V3 : IDisposable
+    public class Pzem004V3 : IEnergyMeter, IDisposable
     {
         private const byte slaveAddress = 0x01;
         private readonly ITransport port;
