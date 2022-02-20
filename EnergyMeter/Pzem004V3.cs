@@ -6,6 +6,7 @@ using NLog;
 
 using EnergyMeter.Interfaces;
 using EnergyMeter.Models;
+using EnergyMeter.Enums;
 
 namespace EnergyMeter
 {
@@ -28,6 +29,8 @@ namespace EnergyMeter
         public int RefreshMs { get; set; } = 500;
 
         public event EventHandler<ElectricalMeasurements> NewReading;
+        public event EventHandler<ErrorCode> Error;
+
         public void AutoRead()
         {          
             autoread = true;
@@ -48,9 +51,11 @@ namespace EnergyMeter
             using MemoryStream txStream = new MemoryStream();
             using BinaryWriter bw = new BinaryWriter(txStream);
 
-            byte[] answer = ModbusExchange(slaveAddress, 0x04, 0, 10, 25);
+            int answerLen = 25;
 
-            if (CheckCrc(answer))
+            byte[] answer = ModbusExchange(slaveAddress, 0x04, 0, 10, answerLen);
+
+            if (answer.Length == answerLen)
             {
                 using MemoryStream rxStream = new MemoryStream(answer);
                 using BinaryReader br = new BinaryReader(rxStream);
@@ -93,11 +98,28 @@ namespace EnergyMeter
             bw.Write(crc);
 
             byte[] tx = ms.ToArray();
+            byte[] rxData = Array.Empty<byte>();
             log.Trace($"TX: {tx.ToHex()}");
-            port.Write(tx);
+            try
+            {
+                port.Write(tx);
+                rxData = port.Read(expectedLen);
+            }
+            catch(IOException ioEx)
+            {
+                log.Warn(ioEx);
+                Error?.Invoke(this, ErrorCode.Communication);
+            }
 
-            byte[] rxData = port.Read(expectedLen);
             log.Trace($"RX: {rxData.ToHex()}");
+
+            if (!CheckCrc(rxData))
+            {
+                log.Warn("Invalid crc received");
+                Error?.Invoke(this, ErrorCode.Crc);
+                rxData = Array.Empty<byte>();
+            }
+
             return rxData;
         }
 
