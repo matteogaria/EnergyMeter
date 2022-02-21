@@ -164,12 +164,6 @@ namespace EnergyMeter
 
         private static ushort Reverse(ushort x) => (ushort)((ushort)((x & 0xff) << 8) | ((x >> 8) & 0xff));
 
-        private static uint Reverse(uint x)
-        {
-            // swap adjacent 16-bit blocks
-            x = (x >> 16) | (x << 16);
-            // swap adjacent 8-bit blocks
-            return (uint)((x & 0xFF00FF00) >> 8) | ((x & 0x00FF00FF) << 8);
-        }
+        private static uint Reverse(uint x) => (x >> 16) | (x << 16);
     }
 }
