@@ -65,12 +65,13 @@ namespace EnergyMeter
                 using MemoryStream rxStream = new MemoryStream(answer);
                 using BinaryReader br = new BinaryReader(rxStream);
                 br.ReadBytes(3); // removing useless header
-                Measurements.Voltage = Reverse(br.ReadUInt16()) / 10.0f;
-                Measurements.Current = Reverse(br.ReadUInt32()) / 1000.0f;
-                Measurements.Power = Reverse(br.ReadUInt32()) / 10.0f;
-                Measurements.Energy = Reverse(br.ReadUInt32());
-                Measurements.Frequency = Reverse(br.ReadUInt16()) / 10.0f;
-                Measurements.PowerFactor = Reverse(br.ReadUInt16()) / 100.0f;
+                Measurements.Voltage = br.ReadUInt16Reverse() / 10.0f;
+                Measurements.Current = br.ReadUInt32Reverse() / 1000.0f;
+                Measurements.Power = br.ReadUInt32Reverse() / 10.0f;
+                Measurements.Energy = br.ReadUInt32Reverse();
+                Measurements.Frequency = br.ReadUInt16Reverse() / 10.0f;
+                Measurements.PowerFactor = br.ReadUInt16Reverse() / 100.0f;
+
                 log.Debug(Measurements.ToString());
                 NewReading?.Invoke(this, Measurements);
             }
@@ -96,8 +97,8 @@ namespace EnergyMeter
             bw.Write(funct);
             if (count > 0)
             {
-                bw.Write(Reverse(start));
-                bw.Write(Reverse(count));
+                bw.WriteUInt16Reverse(start);
+                bw.WriteUInt16Reverse(count);
             }
             ushort crc = ModbusRtuCrc(ms.GetBuffer(), (int)ms.Length);
             bw.Write(crc);
@@ -161,9 +162,5 @@ namespace EnergyMeter
             ushort rxCrc = ModbusRtuCrc(buffer, buffer.Length - 2);
             return buffer[^1] == (rxCrc >> 8) && buffer[^2] == (rxCrc & 0xff);
         }
-
-        private static ushort Reverse(ushort x) => (ushort)((ushort)((x & 0xff) << 8) | ((x >> 8) & 0xff));
-
-        private static uint Reverse(uint x) => (x >> 16) | (x << 16);
     }
 }
