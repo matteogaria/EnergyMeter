@@ -16,7 +16,6 @@ namespace EnergyMeter.Demo
             meter.AutoRead();
 
             meter.Error += (m, e) => log.Error($"error notification: {e}");
-
             meter.NewReading += (m, r) => log.Info("Reading");
 
             Console.ReadKey();

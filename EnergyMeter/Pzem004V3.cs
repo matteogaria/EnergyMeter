@@ -46,6 +46,11 @@ namespace EnergyMeter
             }).Start();
         }
 
+        public void Stop()
+        {
+            autoread = false;
+        }
+
         public void ReadAll()
         {
             using MemoryStream txStream = new MemoryStream();
