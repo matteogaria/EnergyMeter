@@ -80,7 +80,7 @@ namespace EnergyMeter.Transport
 
         public bool Write(byte[] data, int timeoutOffset = 0)
         {
-            port.Write(data, 0, data.Length);
+            //port.Write(data, 0, data.Length);
             return true;
         }
 

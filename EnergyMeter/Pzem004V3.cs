@@ -32,12 +32,12 @@ namespace EnergyMeter
         public event EventHandler<ErrorCode> Error;
 
         public void AutoRead()
-        {          
+        {
             autoread = true;
             new Thread(() =>
             {
                 autoreadThreadRunning = true;
-                while(autoread)
+                while (autoread)
                 {
                     ReadAll();
                     Thread.Sleep(RefreshMs);
@@ -104,16 +104,21 @@ namespace EnergyMeter
             {
                 port.Write(tx);
                 rxData = port.Read(expectedLen);
+                log.Trace($"RX: {rxData.ToHex()}");
             }
-            catch(IOException ioEx)
+            catch (Exception ex)
             {
-                log.Warn(ioEx);
+                log.Warn(ex);
                 Error?.Invoke(this, ErrorCode.Communication);
+                return rxData;
             }
 
-            log.Trace($"RX: {rxData.ToHex()}");
-
-            if (!CheckCrc(rxData))
+            if (rxData.Length == 0)
+            {
+                log.Warn("Timeout during communication");
+                Error?.Invoke(this, ErrorCode.Timeout);
+            }
+            else if (!CheckCrc(rxData))
             {
                 log.Warn("Invalid crc received");
                 Error?.Invoke(this, ErrorCode.Crc);
